@@ -1,7 +1,6 @@
 from textnode import TextNode, TextType
 
 
-print("hello world")
 
 def main():
     node = TextNode(
