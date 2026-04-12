@@ -1,7 +1,7 @@
 from platform import node
 import unittest
 from converter import text_node_to_html_node
-from htmlnode import HTMLNode, ParentNode
+from htmlnode import HTMLNode, ParentNode, split_nodes_image, split_nodes_link
 from htmlnode import LeafNode
 from textnode import TextNode, TextType, split_nodes_delimiter
 from htmlnode import extract_markdown_images, extract_markdown_links
@@ -236,5 +236,88 @@ def test_links_ignore_images(self):
         [("real link", "url2")],
         matches
     )
+
+def test_split_nodes_image_single(self):
+    node = TextNode(
+        "Here is an image ![alt](http://img.com/a.png) in text",
+        TextType.TEXT
+    )
+    result = split_nodes_image([node])
+
+    expected = [
+        TextNode("Here is an image ", TextType.TEXT),
+        TextNode("alt", TextType.IMAGE, "http://img.com/a.png"),
+        TextNode(" in text", TextType.TEXT),
+    ]
+
+    self.assertListEqual(result, expected)
+
+def test_split_nodes_image_multiple(self):
+    node = TextNode(
+        "Start ![one](url1) middle ![two](url2) end",
+        TextType.TEXT
+    )
+    result = split_nodes_image([node])
+
+    expected = [
+         TextNode("Start ", TextType.TEXT),
+         TextNode("one", TextType.IMAGE, "url1"),
+         TextNode(" middle ", TextType.TEXT),
+         TextNode("two", TextType.IMAGE, "url2"),
+         TextNode(" end", TextType.TEXT),
+    ]
+
+    self.assertListEqual(result, expected) 
+
+def test_split_nodes_image_none(self):
+    node = TextNode(
+        "There are no images here.",
+        TextType.TEXT
+    )
+    result = split_nodes_image([node])
+
+    expected = [node]  # unchanged
+
+    self.assertListEqual(result, expected)
+
+def test_split_nodes_image_none(self):
+    node = TextNode(
+        "There are no images here.",
+        TextType.TEXT
+    )
+    result = split_nodes_image([node])
+
+    expected = [node]  # unchanged
+
+    self.assertListEqual(result, expected)
+
+def test_split_nodes_link_multiple(self):
+    node = TextNode(
+        "Go to [one](url1) or maybe [two](url2)",
+        TextType.TEXT
+    )
+    result = split_nodes_link([node])
+
+    expected = [
+        TextNode("Go to ", TextType.TEXT),
+        TextNode("one", TextType.LINK, "url1"),
+        TextNode(" or maybe ", TextType.TEXT),
+        TextNode("two", TextType.LINK, "url2"),
+    ]
+
+    self.assertListEqual(result, expected)
+
+def test_split_nodes_link_none(self):
+    node = TextNode(
+        "There are no links here.",
+        TextType.TEXT
+    )
+    result = split_nodes_link([node])
+
+    expected = [node]  # unchanged
+
+    self.assertListEqual(result, expected)    
+                
+
 if __name__ == "__main__":
     unittest.main()
