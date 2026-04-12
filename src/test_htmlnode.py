@@ -4,6 +4,7 @@ from converter import text_node_to_html_node
 from htmlnode import HTMLNode, ParentNode
 from htmlnode import LeafNode
 from textnode import TextNode, TextType, split_nodes_delimiter
+from htmlnode import extract_markdown_images, extract_markdown_links
 
 
 class TestHTMLNode(unittest.TestCase):
@@ -212,7 +213,28 @@ class TestSplitNodesDelimiter(unittest.TestCase):
 
         self.assertEqual(result, [node])
 
+def test_multiple_images(self):
+    text = "![one](url1) and ![two](url2)"
+    matches = extract_markdown_images(text)
+    self.assertListEqual(
+        [("one", "url1"), ("two", "url2")],
+        matches
+    )
 
-
+def test_extract_markdown_links(self):
+    matches = extract_markdown_links(
+        "Here is a [link](https://example.com)"
+    )
+    self.assertListEqual(
+        [("link", "https://example.com")],
+        matches
+    )   
+def test_links_ignore_images(self):
+    text = "![img](url1) and [real link](url2)"
+    matches = extract_markdown_links(text)
+    self.assertListEqual(
+        [("real link", "url2")],
+        matches
+    )
 if __name__ == "__main__":
     unittest.main()

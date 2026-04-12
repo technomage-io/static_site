@@ -1,3 +1,5 @@
+import re
+
 class HTMLNode:
     def __init__(self, tag=None, value=None, children=None, props=None):
         self.tag = tag
@@ -62,3 +64,18 @@ class ParentNode(HTMLNode):
     
     def __repr__(self):
         return f"ParentNode(tag={self.tag}, children={self.children}, props={self.props})"
+    
+
+
+def extract_markdown_images(text):
+    pattern = r"!\[([^\[\]]*)\]\(([^\(\)]*)\)"
+    matches = re.findall(pattern, text)
+    return matches
+
+
+
+def extract_markdown_links(text):
+    pattern = r"(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)"
+    matches = re.findall(pattern, text)
+    return matches
+
