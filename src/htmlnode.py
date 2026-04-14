@@ -2,6 +2,9 @@ import re
 
 from textnode import TextNode, TextType
 
+from textnode import split_nodes_delimiter
+
+
 class HTMLNode:
     def __init__(self, tag=None, value=None, children=None, props=None):
         self.tag = tag
@@ -299,3 +302,21 @@ def split_nodes_link(old_nodes):
             new_nodes.append(TextNode(text, TextType.TEXT))
 
     return new_nodes
+
+def text_to_textnodes(text):
+    # Start with one raw text node
+    nodes = [TextNode(text, TextType.TEXT)]
+
+    # Extract images first
+    nodes = split_nodes_image(nodes)
+
+    # Extract links next
+    nodes = split_nodes_link(nodes)
+
+    # Then apply formatting delimiters
+    nodes = split_nodes_delimiter(nodes, "`", TextType.CODE)
+    nodes = split_nodes_delimiter(nodes, "**", TextType.BOLD)
+    nodes = split_nodes_delimiter(nodes, "_", TextType.ITALIC)
+
+    return nodes
+
