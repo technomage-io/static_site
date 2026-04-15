@@ -4,7 +4,7 @@ from converter import text_node_to_html_node
 from htmlnode import HTMLNode, ParentNode, split_nodes_image, split_nodes_link
 from htmlnode import LeafNode
 from textnode import TextNode, TextType, split_nodes_delimiter
-from htmlnode import extract_markdown_images, extract_markdown_links, text_to_textnodes
+from htmlnode import extract_markdown_images, extract_markdown_links, text_to_textnodes, markdown_to_blocks
 
 
 
@@ -372,7 +372,68 @@ def test_text_to_textnodes_full_example(self):
 
     self.assertEqual(result, expected)
 
-                
+def test_basic_blocks():
+    md = """# This is a heading
+
+This is a paragraph.
+
+- item 1
+- item 2
+"""
+    expected = [
+        "# This is a heading",
+        "This is a paragraph.",
+        "- item 1\n- item 2"
+    ]
+    assert markdown_to_blocks(md) == expected
+            
+def test_extra_blank_lines():
+    md = """# Title
+
+
+
+Paragraph text.
+
+
+
+"""
+    expected = [
+        "# Title",
+        "Paragraph text."
+    ]
+    assert markdown_to_blocks(md) == expected
+
+def test_strip_whitespace():
+    md = """   # Heading    
+
+    Paragraph with spaces.    
+
+"""
+    expected = [
+        "# Heading",
+        "Paragraph with spaces."
+    ]
+    assert markdown_to_blocks(md) == expected
+
+
+def test_single_block():
+    md = "# Only one block here"
+    expected = ["# Only one block here"]
+    assert markdown_to_blocks(md) == expected
+
+def test_multiple_lists():
+    md = """- a
+- b
+
+- c
+- d
+"""
+    expected = [
+        "- a\n- b",
+        "- c\n- d"
+    ]
+    assert markdown_to_blocks(md) == expected
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -320,3 +320,14 @@ def text_to_textnodes(text):
 
     return nodes
 
+def markdown_to_blocks(markdown):
+    # Split on double newlines to get raw blocks
+    raw_blocks = markdown.split("\n\n")
+
+    blocks = []
+    for block in raw_blocks:
+        cleaned = block.strip()
+        if cleaned:          # ignore empty blocks
+            blocks.append(cleaned)
+
+    return blocks
