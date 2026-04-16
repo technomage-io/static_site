@@ -3,8 +3,9 @@ import unittest
 from converter import text_node_to_html_node
 from htmlnode import HTMLNode, ParentNode, split_nodes_image, split_nodes_link
 from htmlnode import LeafNode
-from textnode import TextNode, TextType, split_nodes_delimiter
+from textnode import TextNode, TextType, block_to_block_type, split_nodes_delimiter
 from htmlnode import extract_markdown_images, extract_markdown_links, text_to_textnodes, markdown_to_blocks
+from textnode import BlockType, block_to_block_type
 
 
 
@@ -434,6 +435,56 @@ def test_multiple_lists():
     ]
     assert markdown_to_blocks(md) == expected
 
+def test_heading_levels(self):
+    self.assertEqual(block_to_block_type("# Heading"), BlockType.HEADING)
+    self.assertEqual(block_to_block_type("###### Six levels"), BlockType.HEADING)
+
+def test_invalid_heading_missing_space(self):
+    self.assertEqual(block_to_block_type("#Heading"), BlockType.PARAGRAPH)
+
+def test_code_block(self):
+   md = "```\nprint('hello')\n```"
+   self.assertEqual(block_to_block_type(md), BlockType.CODE)
+
+def test_code_block_empty(self):
+    md = "```\n```"
+    self.assertEqual(block_to_block_type(md), BlockType.CODE)
+
+def test_quote_block(self):
+    md = "> quote line 1\n> quote line 2"
+    self.assertEqual(block_to_block_type(md), BlockType.QUOTE)
+
+def test_quote_block_with_optional_space(self):
+    md = "> quote\n>    more quote"
+    self.assertEqual(block_to_block_type(md), BlockType.QUOTE)
+
+def test_invalid_quote_block(self):
+    md = "> valid\nnot valid"
+    self.assertEqual(block_to_block_type(md), BlockType.PARAGRAPH)
+
+def test_unordered_list(self):
+    md = "- item 1\n- item 2\n- item 3"
+    self.assertEqual(block_to_block_type(md), BlockType.UNORDERED_LIST)
+
+def test_invalid_unordered_list_missing_space(self):
+    md = "-item 1\n- item 2"
+    self.assertEqual(block_to_block_type(md), BlockType.PARAGRAPH)
+
+def test_ordered_list(self):
+    md = "1. first\n2. second\n3. third"
+    self.assertEqual(block_to_block_type(md), BlockType.ORDERED_LIST)
+
+def test_ordered_list_wrong_start_number(self):
+    md = "2. wrong\n3. wrong"
+    self.assertEqual(block_to_block_type(md), BlockType.PARAGRAPH)
+
+def test_ordered_list_wrong_increment(self):
+    md = "1. ok\n3. wrong"
+    self.assertEqual(block_to_block_type(md), BlockType.PARAGRAPH)
+
+def test_paragraph_default(self):
+    md = "This is just a normal paragraph of text."
+    self.assertEqual(block_to_block_type(md), BlockType.PARAGRAPH)
 
 if __name__ == "__main__":
     unittest.main()
