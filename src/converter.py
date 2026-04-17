@@ -1,5 +1,6 @@
 from htmlnode import LeafNode
-from textnode import TextType, TextNode
+from textnode import TextNode, TextType, text_to_textnodes
+
 
 def text_node_to_html_node(text_node):
     if text_node.text_type == TextType.TEXT:
@@ -21,3 +22,11 @@ def text_node_to_html_node(text_node):
         return LeafNode("img", "", {"src": text_node.url, "alt": text_node.text})
 
     raise Exception("Unknown TextType in text_node_to_html_node")
+
+
+def text_to_children(text):
+    """
+    Convert raw text into a list of HTMLNodes using inline markdown parsing.
+    """
+    text_nodes = text_to_textnodes(text)
+    return [text_node_to_html_node(node) for node in text_nodes]

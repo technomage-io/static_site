@@ -1,11 +1,24 @@
-from platform import node
 import unittest
+
+from htmlnode import HTMLNode, LeafNode, ParentNode
+from textnode import (
+    TextNode,
+    TextType,
+    BlockType,
+    split_nodes_delimiter,
+    split_nodes_image,
+    split_nodes_link,
+    extract_markdown_images,
+    extract_markdown_links,
+    text_to_textnodes,
+)
+from markdown import (
+    markdown_to_blocks,
+    markdown_to_html_node,
+    block_to_block_type,
+)
 from converter import text_node_to_html_node
-from htmlnode import HTMLNode, ParentNode, split_nodes_image, split_nodes_link
-from htmlnode import LeafNode
-from textnode import TextNode, TextType, block_to_block_type, split_nodes_delimiter
-from htmlnode import extract_markdown_images, extract_markdown_links, text_to_textnodes, markdown_to_blocks
-from textnode import BlockType, block_to_block_type
+
 
 
 
@@ -486,5 +499,86 @@ def test_paragraph_default(self):
     md = "This is just a normal paragraph of text."
     self.assertEqual(block_to_block_type(md), BlockType.PARAGRAPH)
 
+def test_single_heading(self):
+        md = "# Hello World"
+        root = markdown_to_html_node(md)
+
+        self.assertEqual(root.tag, "div")
+        self.assertEqual(len(root.children), 1)
+
+        h1 = root.children[0]
+        self.assertEqual(h1.tag, "h1")
+        self.assertEqual(h1.children[0].text, "Hello World")
+
+def test_paragraph(self):
+        md = "This is a paragraph."
+        root = markdown_to_html_node(md)
+
+        self.assertEqual(len(root.children), 1)
+        p = root.children[0]
+        self.assertEqual(p.tag, "p")
+        self.assertEqual(p.children[0].text, "This is a paragraph.")
+
+def test_unordered_list(self):
+        md = "- a\n- b\n- c"
+        root = markdown_to_html_node(md)
+
+        ul = root.children[0]
+        self.assertEqual(ul.tag, "ul")
+        self.assertEqual(len(ul.children), 3)
+
+        self.assertEqual(ul.children[0].tag, "li")
+        self.assertEqual(ul.children[0].children[0].text, "a")
+
+def test_ordered_list(self):
+        md = "1. first\n2. second\n3. third"
+        root = markdown_to_html_node(md)
+
+        ol = root.children[0]
+        self.assertEqual(ol.tag, "ol")
+        self.assertEqual(len(ol.children), 3)
+
+        self.assertEqual(ol.children[1].children[0].text, "second")
+
+def test_quote_block(self):
+        md = "> hello\n> world"
+        root = markdown_to_html_node(md)
+
+        blockquote = root.children[0]
+        self.assertEqual(blockquote.tag, "blockquote")
+
+        # Inline parser usually merges into one text node
+        text = blockquote.children[0].text
+        self.assertIn("hello", text)
+        self.assertIn("world", text)
+
+def test_code_block(self):
+        md = "```\nprint('hi')\n```"
+        root = markdown_to_html_node(md)
+
+        pre = root.children[0]
+        self.assertEqual(pre.tag, "pre")
+
+        code = pre.children[0]
+        self.assertEqual(code.tag, "code")
+
+        text_node = code.children[0]
+        self.assertEqual(text_node.text, "print('hi')")
+
+def test_multiple_blocks(self):
+        md = """# Title
+
+Paragraph text.
+
+- a
+- b
+"""
+        root = markdown_to_html_node(md)
+
+        self.assertEqual(len(root.children), 3)
+
+        self.assertEqual(root.children[0].tag, "h1")
+        self.assertEqual(root.children[1].tag, "p")
+        self.assertEqual(root.children[2].tag, "ul")
 if __name__ == "__main__":
     unittest.main()
