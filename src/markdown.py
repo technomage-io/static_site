@@ -1,4 +1,4 @@
-from htmlnode import HTMLNode
+from htmlnode import ParentNode, LeafNode, HTMLNode
 from textnode import TextNode, BlockType
 from converter import text_to_children, text_node_to_html_node
 
@@ -47,35 +47,33 @@ def block_to_block_type(block):
 
 def markdown_to_html_node(markdown):
     blocks = markdown_to_blocks(markdown)
-    parent = HTMLNode("div", children=[])
+
+    # Start with a simple container that can be empty
+    children = []
 
     for block in blocks:
         block_type = block_to_block_type(block)
 
         if block_type == BlockType.HEADING:
             node = heading_to_html_node(block)
-
         elif block_type == BlockType.PARAGRAPH:
             node = paragraph_to_html_node(block)
-
         elif block_type == BlockType.UNORDERED_LIST:
             node = unordered_list_to_html_node(block)
-
         elif block_type == BlockType.ORDERED_LIST:
             node = ordered_list_to_html_node(block)
-
         elif block_type == BlockType.QUOTE:
             node = quote_to_html_node(block)
-
         elif block_type == BlockType.CODE:
             node = code_block_to_html_node(block)
-
         else:
             raise ValueError(f"Unknown block type: {block_type}")
 
-        parent.children.append(node)
+        children.append(node)
 
-    return parent
+    # NOW we can safely create a ParentNode
+    return ParentNode("div", children)
+
 
 def markdown_to_blocks(markdown):
     # Split on double newlines to get raw blocks
@@ -100,11 +98,11 @@ def heading_to_html_node(block):
     text = block[level+1:]  # skip "#... "
 
     children = text_to_children(text)
-    return HTMLNode(f"h{level}", children=children)
+    return ParentNode(f"h{level}", children=children)
 
 def paragraph_to_html_node(block):
     children = text_to_children(block)
-    return HTMLNode("p", children=children)
+    return ParentNode("p", children=children)
 
 def unordered_list_to_html_node(block):
     lines = block.split("\n")
@@ -113,9 +111,9 @@ def unordered_list_to_html_node(block):
     for line in lines:
         text = line[2:]  # remove "- "
         li_children = text_to_children(text)
-        items.append(HTMLNode("li", children=li_children))
+        items.append(ParentNode("li", children=li_children))
 
-    return HTMLNode("ul", children=items)
+    return ParentNode("ul", children=items)
 
 def ordered_list_to_html_node(block):
     lines = block.split("\n")
@@ -126,9 +124,9 @@ def ordered_list_to_html_node(block):
         dot_index = line.index(".")
         text = line[dot_index + 2:]
         li_children = text_to_children(text)
-        items.append(HTMLNode("li", children=li_children))
+        items.append(ParentNode("li", children=li_children))
 
-    return HTMLNode("ol", children=items)
+    return ParentNode("ol", children=items)
 
 def quote_to_html_node(block):
     lines = block.split("\n")
@@ -138,15 +136,40 @@ def quote_to_html_node(block):
     text = " ".join(stripped)
     children = text_to_children(text)
 
-    return HTMLNode("blockquote", children=children)
+    return ParentNode("blockquote", children=children)
+
 
 def code_block_to_html_node(block):
     # Remove the ``` wrapper
-    inner = block[4:-3]  # remove "```\n" at start and "```" at end
+    inner = block[4:-3]
 
-    # No inline parsing — raw text only
-    text_node = TextNode(inner, "text")
-    child = text_node_to_html_node(text_node)
+    # Code blocks should NOT be inline parsed
+    code_child = LeafNode(None, inner)
+    code_node = ParentNode("code", [code_child])
+    return ParentNode("pre", [code_node])
 
-    return HTMLNode("pre", children=[HTMLNode("code", children=[child])])
+def extract_title(markdown: str) -> str:
+    """
+    Extract the first H1 title from the markdown string.
+    An H1 is a line that starts with a single '#' followed by a space or text.
+    Raises a ValueError if no H1 is found.
+    """
+    lines = markdown.split("\n")
 
+    for line in lines:
+        stripped = line.strip()
+        # Must start with exactly one '#' followed by a space or text
+        if stripped.startswith("#"):
+            # Count leading '#'
+            i = 0
+            while i < len(stripped) and stripped[i] == "#":
+                i += 1
+
+            # Only accept a single '#'
+            if i == 1:
+                # Get the rest of the line after '#'
+                title = stripped[i:].strip()
+                if title:
+                    return title
+
+    raise Exception("No H1 title found in markdown")
