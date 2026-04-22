@@ -1,5 +1,5 @@
 from copystatic import copy_directory
-from generate_page import generate_page
+from generate_pages_recursive import generate_pages_recursive
 
 def main():
     # Step 1: Copy static → public
@@ -7,11 +7,10 @@ def main():
     print("Static files copied successfully.")
 
     # Step 2: Generate index.html from markdown + template
-    generate_page(
-        from_path="content/index.md",
+    generate_pages_recursive(
+        dir_path_content="content",
         template_path="template.html",
-        dest_path="public/index.html"
-    )
-
+        dest_dir_path="public"
+)
 if __name__ == "__main__":
     main()
