@@ -1,7 +1,7 @@
 import os
 from markdown import markdown_to_html_node, extract_title
 
-def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, basepath):
     # Load template once
     with open(template_path, "r") as f:
         template_content = f.read()
@@ -26,6 +26,10 @@ def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
                 # Fill template
                 full_html = template_content.replace("{{ Title }}", title)
                 full_html = full_html.replace("{{ Content }}", html_content)
+
+                # NEW: apply basepath rewrites
+                full_html = full_html.replace('href="/', f'href="{basepath}')
+                full_html = full_html.replace('src="/', f'src="{basepath}')
 
                 # Compute output path
                 relative_path = os.path.relpath(root, dir_path_content)
